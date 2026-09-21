@@ -1,0 +1,1 @@
+9/21 exploring touch designer projects was easier when I searched on instagram or TikTok to find things that I wanted to make, rather then just a internet search or even bechance. I found that there are lots of key words to use when looking just fro work rather then a tutorial. looking in lots of different places though help me a lot with coming up with my 10 concepts. 
