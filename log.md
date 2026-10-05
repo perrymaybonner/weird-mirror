@@ -27,3 +27,7 @@ The selected image returns to the collection.
 6. Return → “Orbit”
 Everything returns to the spiral.
 I then gave claude this flow and asked to help me rebuild this, I asked it to ask me questions. I like my process so far. I think the flow works but am still deciding what images to use and how that affects the user. there are still thing I need to smooth out with the hand tracking, I want it to feel super smooth. 
+
+9/30 I changed my concept to a gallery that I will curate and create a concept around the spiral in which the pictures right now are shown. when the user selects images in the grid the image appears with a title of the art piece and a description about the work 
+
+10/5 user testing after refining my flow, I put my weird mirror in-front of other people. Most users enjoyed the movement of the photos and had a fine time finding how to select the images to see description. I did notice that discovering the grid took more time for some people so I will make some adjustment to how easy it is to have the photo snap to grid to then select the images. 
