@@ -139,3 +139,9 @@ Format per entry: what I tried · what broke · what I asked Claude · what fina
 - **Asked for:** bring the intro and instructions back every 15 s if the visitor isn't on a selected image.
 - **Changed:** `intro_repeat` is 15 s, and only a selection (an artwork chosen, shown, or returning home) holds the clock. Safeguard: a due replay waits while hands are up, so it never covers someone mid-aim in the grid, and plays as soon as they drop; a replay still fades out the moment a hand goes up.
 - **Checked:** `test_intro_replays_unless_an_artwork_is_selected` (replays ~15 s after the intro while someone walks around; waits through 20 s of hands up, then plays; never replays over a selected artwork). 13 tests pass. Applied in TouchDesigner (Replay Every = 15 s) and saved.
+
+## 2026-10-07 - Intro always plays in full, then the spiral
+- **Asked for:** show the title and then the instruction screen back to back, then go into the spiralling photos.
+- **Found:** two ways this could break. A replay was cancelled if a hand appeared (my earlier safeguard), which skipped the instructions. And a raised hand could open the grid behind the intro, so the intro faded into the grid instead of the spiral.
+- **Changed:** every intro (first or replay) now always plays title then instructions in full; replays still only start when hands are down. The grid can't open while the intro is showing. When the intro ends, the spiral cycle restarts, so the photos spiral out from the centre.
+- **Checked:** the replay test now covers hands coming up mid-replay (it isn't cut short, no grid behind it, instructions follow, and it ends in the spiral with the cycle restarted); grid tests run with the intro off. 13 tests pass. Live: replay started on the title, hands raised during it, then the instructions page, then the mirror with ~10 photos spiralling out from the centre.

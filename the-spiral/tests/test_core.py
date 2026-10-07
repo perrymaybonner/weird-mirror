@@ -50,7 +50,7 @@ def still_hand(t):
 
 
 def test_full_loop():
-    loop = L.CuriosityLoop(16)
+    loop = L.CuriosityLoop(16, {'intro': False})
     fr = run(loop, 1, nobody)
     assert fr.state == L.IDLE
 
@@ -89,7 +89,7 @@ def test_full_loop():
 
 def test_orbit_responds_more_than_awareness():
     def lean_amount(visited):
-        loop = L.CuriosityLoop(16)
+        loop = L.CuriosityLoop(16, {'intro': False})
         loop.visited = visited
         run(loop, 3, lambda t: standing(t, 0.0))
         cx0 = sum(p.x for p in loop._compose([], DT).photos)
@@ -101,7 +101,7 @@ def test_orbit_responds_more_than_awareness():
 
 
 def test_cursor_toggle():
-    loop = L.CuriosityLoop(16, {'show_cursors': True})
+    loop = L.CuriosityLoop(16, {'intro': False, 'show_cursors': True})
     run(loop, 1, standing)
     fr = run(loop, 1, two_hands)
     assert all(c.alpha > 0.1 for c in fr.cursors), 'dots show when enabled'
@@ -115,7 +115,7 @@ def _settle(loop):
 
 
 def test_spiral_builds_out_then_becomes_circle():
-    loop = L.CuriosityLoop(36)
+    loop = L.CuriosityLoop(36, {'intro': False})
     c = loop.cfg
     radii = lambda: [math.hypot(sp['x'].x / 1.15, sp['y'].x) for sp in loop.springs]
 
@@ -141,7 +141,7 @@ def test_spiral_builds_out_then_becomes_circle():
 
 
 def test_selection_holds_then_returns_with_caption():
-    loop = L.CuriosityLoop(16, {'caption_layout': True})
+    loop = L.CuriosityLoop(16, {'intro': False, 'caption_layout': True})
     run(loop, 1, standing)
     run(loop, 1, two_hands)
     fr = run(loop, 2.0, pointing_at(loop, 3))
@@ -206,11 +206,21 @@ def test_intro_replays_unless_an_artwork_is_selected():
     # hands up past the 15 s mark: waits instead of covering the grid mid-aim
     fr = run(loop, 20, two_hands)
     assert loop.intro_phase == 'off' and fr.intro_alpha < 0.05, 'never covers someone aiming'
-    # ...then replays as soon as the hands drop
+    # ...then replays as soon as the hands drop, and plays BOTH pages even if a hand
+    # comes up during it, then hands over to the spiral (not the grid)
     fr = run(loop, 3, standing_moving)
     assert loop.intro_phase != 'off', 'due replay plays once hands are down'
+    fr = run(loop, 3, two_hands)
+    assert loop.intro_phase in ('title_hold', 'instructions'), 'replay is not cut short by hands'
+    assert loop.state != L.REVEAL, 'grid does not open behind the intro'
+    fr = run(loop, 6, two_hands)
+    assert loop.intro_phase == 'instructions' and fr.intro_page > 0.9, 'instructions follow the title'
+    fr = run(loop, 0.5, standing_moving)
+    while loop.intro_phase != 'off':
+        fr = run(loop, 0.2, standing_moving)
+    assert loop.state in (L.AWARENESS, L.ORBIT) and loop.cycle_t < 1.0, 'then the photos spiral out'
     # a selected artwork holds the clock: no replay while looking at one
-    loop2 = L.CuriosityLoop(16, {'intro_repeat': 5.0})
+    loop2 = L.CuriosityLoop(16, {'intro_repeat': 8.0})
     run(loop2, 1, standing)
     run(loop2, 17, standing_moving)
     run(loop2, 1, two_hands)
@@ -225,7 +235,7 @@ def standing_moving(t):
 
 
 def test_forget_returns_to_full_spiral():
-    loop = L.CuriosityLoop(36)
+    loop = L.CuriosityLoop(36, {'intro': False})
     loop.cycle_t = 1.0                            # half-built spiral
     loop._go(L.FORGET)
     assert loop._cycle() == (36.0, 0.0)
@@ -241,7 +251,7 @@ def test_grid_fits_screen():
 
 
 def test_hands_leave_grid_dissolves():
-    loop = L.CuriosityLoop(12)
+    loop = L.CuriosityLoop(12, {'intro': False})
     run(loop, 1, standing)
     run(loop, 1, two_hands)
     assert loop.state == L.REVEAL
@@ -250,7 +260,7 @@ def test_hands_leave_grid_dissolves():
 
 
 def test_person_leaves_and_mirror_forgets():
-    loop = L.CuriosityLoop(12)
+    loop = L.CuriosityLoop(12, {'intro': False})
     loop.visited = True
     run(loop, 1, standing)
     assert loop.state == L.ORBIT
@@ -263,7 +273,7 @@ def test_person_leaves_and_mirror_forgets():
 
 
 def test_garbage_inputs_dont_crash():
-    loop = L.CuriosityLoop(3)
+    loop = L.CuriosityLoop(3, {'intro': False})
     bad = L.Inputs(person=True, body_x=float('nan'), proximity=float('inf'),
                    body_speed=float('nan'), hands=[L.Hand(0, 0, size=0.0, speed=float('nan'))])
     run(loop, 2, lambda t: bad)

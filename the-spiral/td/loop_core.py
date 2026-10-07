@@ -438,7 +438,8 @@ class CuriosityLoop:
                 self._go(IDLE)
             elif s == IDLE and self.visited and self.state_t > cfg['forget_visitor_time']:
                 self.visited = False   # slip back into ambiguity for the next visitor
-            if self.state != IDLE and (
+            # the grid can't open behind the intro: it always hands over to the spiral
+            if self.state != IDLE and getattr(self, 'intro_phase', 'off') == 'off' and (
                     self.two_hand_t >= cfg['two_hand_time'] or
                     (cfg['one_hand_time'] > 0 and self.one_hand_t >= cfg['one_hand_time'])):
                 self._go(REVEAL)
@@ -646,9 +647,6 @@ class CuriosityLoop:
             self.intro_replay = False
             if self.intro_phase != 'title':
                 self.intro_phase, self.intro_phase_t = 'title', 0.0
-        elif self.intro_replay and self.intro_phase != 'off' and interacting:
-            # never stand in the way: a replay gives way as soon as someone interacts
-            self.intro_phase, self.intro_phase_t, self.intro_replay = 'off', 0.0, False
         elif (self.intro_phase == 'off' and c['intro_repeat'] > 0
               and self.no_interact_t >= c['intro_repeat'] and not interacting):
             # due, and nobody is mid-aim with hands up: replay
@@ -660,6 +658,7 @@ class CuriosityLoop:
             self.intro_phase, self.intro_phase_t = 'instructions', 0.0
         elif self.intro_phase == 'instructions' and self.intro_phase_t >= c['intro_instructions_time']:
             self.intro_phase, self.intro_phase_t, self.intro_replay = 'off', 0.0, False
+            self.cycle_t = 0.0      # out of the intro: the photos spiral out from the centre
         self.intro_on = self.intro_phase != 'off'
         tau = (c['intro_fade_in'] if self.intro_on else c['intro_fade_out']) / 3.0
         self.intro_alpha = smooth(self.intro_alpha, 1.0 if self.intro_on else 0.0, dt, tau)
