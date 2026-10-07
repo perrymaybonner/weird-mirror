@@ -145,3 +145,6 @@ Format per entry: what I tried · what broke · what I asked Claude · what fina
 - **Found:** two ways this could break. A replay was cancelled if a hand appeared (my earlier safeguard), which skipped the instructions. And a raised hand could open the grid behind the intro, so the intro faded into the grid instead of the spiral.
 - **Changed:** every intro (first or replay) now always plays title then instructions in full; replays still only start when hands are down. The grid can't open while the intro is showing. When the intro ends, the spiral cycle restarts, so the photos spiral out from the centre.
 - **Checked:** the replay test now covers hands coming up mid-replay (it isn't cut short, no grid behind it, instructions follow, and it ends in the spiral with the cycle restarted); grid tests run with the intro off. 13 tests pass. Live: replay started on the title, hands raised during it, then the instructions page, then the mirror with ~10 photos spiralling out from the centre.
+
+## 2026-10-07 - v4 snapshot
+- Saved as `curiosity_loop_v4_intro.toe` with a **Curiosity Loop - The Spiral with Intro** shortcut on the Desktop, tagged `v4-intro`: Figma intro screens, faint mirror behind them, title then instructions every 15 s unless an artwork is selected, then the spiral.
