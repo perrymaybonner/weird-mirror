@@ -191,24 +191,33 @@ def test_intro_screen():
     assert run(loop3, 1, nobody).intro_alpha == 0.0
 
 
-def test_intro_replays_when_nobody_interacts():
-    loop = L.CuriosityLoop(16, {'intro_repeat': 30.0})
+def test_intro_replays_unless_an_artwork_is_selected():
+    loop = L.CuriosityLoop(16)                 # default: every 15 s without a selection
     run(loop, 1, nobody)
-    run(loop, 17, standing_moving)           # through the first intro
+    run(loop, 17, standing_moving)            # through the first intro
     assert loop.intro_phase == 'off'
-    # hands up / using the grid the whole time: no replay, however long
-    fr = run(loop, 40, two_hands)
-    assert fr.intro_alpha < 0.05 and loop.intro_phase == 'off', 'no replay while interacting'
-    # someone just walking around without interacting: replays after 30 s
-    fr = run(loop, 25, standing_moving)
-    assert loop.intro_phase == 'off', 'not yet: the grid had to dissolve and 30 s pass'
-    fr = run(loop, 8, standing_moving)
+    # walking around without selecting: replays after ~15 s
+    fr = run(loop, 7, standing_moving)        # intro ended ~12 s in; ~13 s of mirror so far
+    assert loop.intro_phase == 'off'
+    fr = run(loop, 4, standing_moving)        # past 15 s
     assert loop.intro_phase in ('title_hold', 'instructions') and fr.intro_alpha > 0.5, loop.intro_phase
-    # raising hands mid-replay makes it give way immediately
-    fr = run(loop, 1.0, two_hands)
+    run(loop, 12, standing_moving)            # replay (3 s title + 8 s instructions) finishes
     assert loop.intro_phase == 'off'
-    fr = run(loop, 1.5, two_hands)
-    assert fr.intro_alpha < 0.2, 'replay fades out when someone interacts'
+    # hands up past the 15 s mark: waits instead of covering the grid mid-aim
+    fr = run(loop, 20, two_hands)
+    assert loop.intro_phase == 'off' and fr.intro_alpha < 0.05, 'never covers someone aiming'
+    # ...then replays as soon as the hands drop
+    fr = run(loop, 3, standing_moving)
+    assert loop.intro_phase != 'off', 'due replay plays once hands are down'
+    # a selected artwork holds the clock: no replay while looking at one
+    loop2 = L.CuriosityLoop(16, {'intro_repeat': 5.0})
+    run(loop2, 1, standing)
+    run(loop2, 17, standing_moving)
+    run(loop2, 1, two_hands)
+    run(loop2, 2.0, pointing_at(loop2, 3))
+    assert loop2.state in (L.FOCUS, L.DISTORT)
+    fr = run(loop2, 5.0, still_hand)
+    assert loop2.intro_phase == 'off' and fr.intro_alpha < 0.05, 'no replay over a selected artwork'
 
 
 def standing_moving(t):

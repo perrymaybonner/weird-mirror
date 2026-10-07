@@ -134,3 +134,8 @@ Format per entry: what I tried · what broke · what I asked Claude · what fina
 - **Asked for:** replay the intro whenever the visitor doesn't interact, rather than on a fixed interval.
 - **Changed:** the replay now triggers after 60 s with no interaction (`intro_repeat`, slider renamed **Replay After No Interaction**). Interaction means hands up, the grid, or a selection, and any of these restarts the clock; just walking around or moving doesn't count. Stillness is no longer required. A replay still gives way the moment a hand goes up.
 - **Checked:** `test_intro_replays_when_nobody_interacts` (no replay while interacting for 40 s; replays after the timeout while someone only walks around; gives way to raised hands). 13 tests pass. Live, with an 8 s timeout: replayed after 8 s with nobody interacting. Set to 60 s.
+
+## 2026-10-07 - Replay every 15 s unless an artwork is selected
+- **Asked for:** bring the intro and instructions back every 15 s if the visitor isn't on a selected image.
+- **Changed:** `intro_repeat` is 15 s, and only a selection (an artwork chosen, shown, or returning home) holds the clock. Safeguard: a due replay waits while hands are up, so it never covers someone mid-aim in the grid, and plays as soon as they drop; a replay still fades out the moment a hand goes up.
+- **Checked:** `test_intro_replays_unless_an_artwork_is_selected` (replays ~15 s after the intro while someone walks around; waits through 20 s of hands up, then plays; never replays over a selected artwork). 13 tests pass. Applied in TouchDesigner (Replay Every = 15 s) and saved.

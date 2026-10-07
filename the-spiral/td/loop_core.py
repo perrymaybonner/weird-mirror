@@ -46,7 +46,7 @@ DEFAULTS = {
     'intro_fade_in': 2.0,       # s for it to return once nobody is there
     'intro_title_hold': 3.0,    # s the title stays up after someone starts moving
     'intro_instructions_time': 8.0,  # s the "raise hands / point to select" page shows before the mirror
-    'intro_repeat': 60.0,       # s without interaction (hands, grid, selecting) before the intro replays (0 = never)
+    'intro_repeat': 15.0,       # s of mirror without a selected artwork before the intro replays (0 = never)
     'person_lost_time': 3.0,    # s without a person before going idle
     'forget_visitor_time': 8.0, # s idle before the mirror forgets you were here
     # --- reveal ---
@@ -247,7 +247,7 @@ class CuriosityLoop:
         self.intro_phase = 'title'  # title -> title_hold -> instructions -> off
         self.intro_phase_t = 0.0
         self.intro_replay = False   # True while a periodic replay is showing
-        self.no_interact_t = 0.0    # s since the visitor last interacted (hands up / grid / selecting)
+        self.no_interact_t = 0.0    # s of mirror since an artwork was last selected
         self.intro_page = 0.0
         self.person_t = 0.0
         self.springs = [{k: _Spring() for k in ('x', 'y', 'z', 'rot', 'scale', 'alpha', 'bright')}
@@ -634,8 +634,9 @@ class CuriosityLoop:
         self.intro_phase_t += dt
         browsing = s in (AWARENESS, ORBIT)        # not in the grid / selecting / letting go
         interacting = bool(hands) or not browsing
-        # the clock only runs while the mirror is showing and nobody is interacting
-        if interacting or self.intro_phase != 'off':
+        selecting = s in (FOCUS, DISTORT, FORGET)  # an artwork is chosen, shown, or going home
+        # the clock runs while the mirror shows and no artwork is selected
+        if selecting or self.intro_phase != 'off':
             self.no_interact_t = 0.0
         else:
             self.no_interact_t += dt
@@ -649,7 +650,8 @@ class CuriosityLoop:
             # never stand in the way: a replay gives way as soon as someone interacts
             self.intro_phase, self.intro_phase_t, self.intro_replay = 'off', 0.0, False
         elif (self.intro_phase == 'off' and c['intro_repeat'] > 0
-              and self.no_interact_t >= c['intro_repeat']):
+              and self.no_interact_t >= c['intro_repeat'] and not interacting):
+            # due, and nobody is mid-aim with hands up: replay
             self.intro_phase, self.intro_phase_t, self.intro_replay = 'title_hold', 0.0, True
         elif self.intro_phase == 'title' and self.person_t > 0.3 and (
                 self.motion > c['intro_motion'] or self.person_t > c['intro_max_wait']):
