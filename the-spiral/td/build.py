@@ -106,6 +106,7 @@ def _build():
     it.default = it.val = 'THE SPIRAL'
     isub = intro.appendStr('Introsubtitle', label='Subtitle')[0]
     isub.default = isub.val = 'a continuous movement through states of being\nlife, death, transformation, return'
+    f(intro, 'Intromirror', 'Mirror Behind Intro', 0.15, 0.0, 0.6)
 
     sim = base.appendCustomPage('Simulate')
     t(sim, 'Simulate', 'Simulate (no camera)', True)
@@ -314,7 +315,12 @@ def _build():
     # page 1: THE SPIRAL / subtitle
     ititle = text_layer('intro_title', 0, 39, '=parent().par.Introtitle', inter, 90, 22, 14)
     isubt = text_layer('intro_subtitle', 0, -74, '=parent().par.Introsubtitle', inter_light, 25, 22, 16, spacing=6)
-    p1a = over('intro_p1_title', ititle, ibg, 23, 14)
+    # a very faint mirror of the visitor behind both intro pages (artworks stay hidden)
+    imir = place(base.create(levelTOP, 'intro_mirror'), 22, 10)
+    imir.inputConnectors[0].connect(gfit)
+    setp(imir, opacity='=parent().par.Intromirror')
+    ibase = over('intro_base', imir, ibg, 23, 11)
+    p1a = over('intro_p1_title', ititle, ibase, 23, 14)
     page1 = over('intro_page1', isubt, p1a, 24, 15)
 
     # page 2: instructions with the hand images (pointing hand's grey square crushed to black)
@@ -334,9 +340,18 @@ def _build():
     # Over TOP scales before it translates, so offsets are given in pre-scale pixels
     def at(x, y, sc):
         return dict(tx=round(x / sc, 1), ty=round(y / sc, 1), sx=sc, sy=sc)
-    p2a = over('intro_p2_left', hl, ibg, 24, 18, **at(-319, -50, 0.703))
+    p2a = over('intro_p2_left', hl, ibase, 24, 18, **at(-319, -50, 0.703))
     p2b = over('intro_p2_right', hr, p2a, 25, 19, **at(-125, -59, 0.703))
-    p2c = over('intro_p2_point', hp, p2b, 26, 20, **at(195, -55, 0.593))
+    # the pointing hand comes on its own dark square: place it on a clear layer, then
+    # "lighten" it onto the page so only the white hand shows over the faint mirror
+    clear = place(base.create(constantTOP, 'intro_clear'), 24, 21)
+    setp(clear, outputresolution='custom', resolutionw=1280, resolutionh=720,
+         colorr=0, colorg=0, colorb=0, alpha=0)
+    pt_layer = over('intro_p2_point', hp, clear, 25, 21, **at(195, -55, 0.593))
+    p2c = place(base.create(compositeTOP, 'intro_p2_point_lighten'), 26, 20)
+    p2c.inputConnectors[0].connect(p2b)
+    p2c.inputConnectors[1].connect(pt_layer)
+    setp(p2c, operand='maximum')
     p2d = over('intro_p2_raise', raise_t, p2c, 27, 21)
     page2 = over('intro_page2', point_t, p2d, 28, 22)
 

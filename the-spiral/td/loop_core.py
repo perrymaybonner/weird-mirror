@@ -44,7 +44,8 @@ DEFAULTS = {
     'intro_max_wait': 4.0,      # s a still person waits before it fades anyway
     'intro_fade_out': 1.5,      # s for the black to fade into the mirror
     'intro_fade_in': 2.0,       # s for it to return once nobody is there
-    'intro_instructions_time': 5.0,  # s the "raise hands / point to select" page shows before the mirror
+    'intro_title_hold': 3.0,    # s the title stays up after someone starts moving
+    'intro_instructions_time': 8.0,  # s the "raise hands / point to select" page shows before the mirror
     'person_lost_time': 3.0,    # s without a person before going idle
     'forget_visitor_time': 8.0, # s idle before the mirror forgets you were here
     # --- reveal ---
@@ -635,13 +636,16 @@ class CuriosityLoop:
                 self.intro_phase, self.intro_phase_t = 'title', 0.0
         elif self.intro_phase == 'title' and self.person_t > 0.3 and (
                 self.motion > c['intro_motion'] or self.person_t > c['intro_max_wait']):
+            self.intro_phase, self.intro_phase_t = 'title_hold', 0.0
+        elif self.intro_phase == 'title_hold' and self.intro_phase_t >= c['intro_title_hold']:
             self.intro_phase, self.intro_phase_t = 'instructions', 0.0
         elif self.intro_phase == 'instructions' and self.intro_phase_t >= c['intro_instructions_time']:
             self.intro_phase, self.intro_phase_t = 'off', 0.0
         self.intro_on = self.intro_phase != 'off'
         tau = (c['intro_fade_in'] if self.intro_on else c['intro_fade_out']) / 3.0
         self.intro_alpha = smooth(self.intro_alpha, 1.0 if self.intro_on else 0.0, dt, tau)
-        page_target = 0.0 if self.intro_phase == 'title' else 1.0 if self.intro_phase == 'instructions' else self.intro_page
+        page_target = (0.0 if self.intro_phase in ('title', 'title_hold')
+                       else 1.0 if self.intro_phase == 'instructions' else self.intro_page)
         self.intro_page = smooth(self.intro_page, page_target, dt, 0.35)
         fr.intro_alpha = self.intro_alpha if c['intro'] else 0.0
         fr.intro_page = self.intro_page

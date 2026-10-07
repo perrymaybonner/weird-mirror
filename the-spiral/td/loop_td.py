@@ -396,6 +396,7 @@ def _ensure():
         if _S['ops'].get('intro_pages') is None:
             # older saved versions have no instructions page: go straight to the mirror
             _S['loop'].cfg['intro_instructions_time'] = 0.0
+            _S['loop'].cfg['intro_title_hold'] = 0.0
     return core
 
 
