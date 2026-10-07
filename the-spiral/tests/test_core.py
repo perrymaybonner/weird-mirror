@@ -191,18 +191,18 @@ def test_intro_screen():
     assert run(loop3, 1, nobody).intro_alpha == 0.0
 
 
-def test_intro_replays_only_when_idle():
+def test_intro_replays_when_nobody_interacts():
     loop = L.CuriosityLoop(16, {'intro_repeat': 30.0})
-    still = lambda t: L.Inputs(person=True, body_speed=0.0)
     run(loop, 1, nobody)
-    run(loop, 2, standing_moving)
-    run(loop, 15, standing_moving)            # through the first intro
+    run(loop, 17, standing_moving)           # through the first intro
     assert loop.intro_phase == 'off'
-    # hands up / browsing the grid the whole time: no replay, however long
+    # hands up / using the grid the whole time: no replay, however long
     fr = run(loop, 40, two_hands)
     assert fr.intro_alpha < 0.05 and loop.intro_phase == 'off', 'no replay while interacting'
-    # still, hands down: replays once 30 s have passed since the intro ended
-    fr = run(loop, 4, still)
+    # someone just walking around without interacting: replays after 30 s
+    fr = run(loop, 25, standing_moving)
+    assert loop.intro_phase == 'off', 'not yet: the grid had to dissolve and 30 s pass'
+    fr = run(loop, 8, standing_moving)
     assert loop.intro_phase in ('title_hold', 'instructions') and fr.intro_alpha > 0.5, loop.intro_phase
     # raising hands mid-replay makes it give way immediately
     fr = run(loop, 1.0, two_hands)

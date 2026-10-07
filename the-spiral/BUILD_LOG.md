@@ -129,3 +129,8 @@ Format per entry: what I tried · what broke · what I asked Claude · what fina
 - **Asked for:** show the intro screens again every 1-2 minutes, but only if the visitor is still and not interacting (hands up or selecting an artwork).
 - **Changed:** 90 s after the intro last finished (`intro_repeat`, **Replay Every** slider, 0 = off), the intro replays (title, then instructions, then the mirror), but only while the visitor is browsing the spiral (not in the grid, a selection or the let-go), has no hands up, and has been still for 2 s. If anyone raises a hand mid-replay it gives way at once. Older snapshots don't replay.
 - **Checked:** new test `test_intro_replays_only_when_idle` (no replay while hands are up for 40 s; replays once still; gives way to raised hands); 13 tests pass. Live, with a 10 s interval: the replay started after 10 s of stillness and faded out as soon as two hands went up. Restored to 90 s.
+
+## 2026-10-07 - Replay on no interaction
+- **Asked for:** replay the intro whenever the visitor doesn't interact, rather than on a fixed interval.
+- **Changed:** the replay now triggers after 60 s with no interaction (`intro_repeat`, slider renamed **Replay After No Interaction**). Interaction means hands up, the grid, or a selection, and any of these restarts the clock; just walking around or moving doesn't count. Stillness is no longer required. A replay still gives way the moment a hand goes up.
+- **Checked:** `test_intro_replays_when_nobody_interacts` (no replay while interacting for 40 s; replays after the timeout while someone only walks around; gives way to raised hands). 13 tests pass. Live, with an 8 s timeout: replayed after 8 s with nobody interacting. Set to 60 s.

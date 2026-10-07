@@ -46,8 +46,7 @@ DEFAULTS = {
     'intro_fade_in': 2.0,       # s for it to return once nobody is there
     'intro_title_hold': 3.0,    # s the title stays up after someone starts moving
     'intro_instructions_time': 8.0,  # s the "raise hands / point to select" page shows before the mirror
-    'intro_repeat': 90.0,       # s after the intro ends before it may replay (0 = never)
-    'intro_repeat_still': 2.0,  # s the visitor must be still, hands down, before a replay
+    'intro_repeat': 60.0,       # s without interaction (hands, grid, selecting) before the intro replays (0 = never)
     'person_lost_time': 3.0,    # s without a person before going idle
     'forget_visitor_time': 8.0, # s idle before the mirror forgets you were here
     # --- reveal ---
@@ -248,8 +247,7 @@ class CuriosityLoop:
         self.intro_phase = 'title'  # title -> title_hold -> instructions -> off
         self.intro_phase_t = 0.0
         self.intro_replay = False   # True while a periodic replay is showing
-        self.since_intro = 0.0      # s since the intro last finished
-        self.quiet_t = 0.0          # s the visitor has been still with hands down
+        self.no_interact_t = 0.0    # s since the visitor last interacted (hands up / grid / selecting)
         self.intro_page = 0.0
         self.person_t = 0.0
         self.springs = [{k: _Spring() for k in ('x', 'y', 'z', 'rot', 'scale', 'alpha', 'bright')}
@@ -635,20 +633,23 @@ class CuriosityLoop:
         c = self.cfg
         self.intro_phase_t += dt
         browsing = s in (AWARENESS, ORBIT)        # not in the grid / selecting / letting go
-        quiet = browsing and not hands and self.motion < c['still_threshold']
-        self.quiet_t = self.quiet_t + dt if quiet else 0.0
-        self.since_intro = self.since_intro + dt if self.intro_phase == 'off' else 0.0
+        interacting = bool(hands) or not browsing
+        # the clock only runs while the mirror is showing and nobody is interacting
+        if interacting or self.intro_phase != 'off':
+            self.no_interact_t = 0.0
+        else:
+            self.no_interact_t += dt
         if not c['intro']:
             self.intro_phase = 'off'
         elif s == IDLE:
             self.intro_replay = False
             if self.intro_phase != 'title':
                 self.intro_phase, self.intro_phase_t = 'title', 0.0
-        elif self.intro_replay and self.intro_phase != 'off' and (hands or not browsing):
+        elif self.intro_replay and self.intro_phase != 'off' and interacting:
             # never stand in the way: a replay gives way as soon as someone interacts
             self.intro_phase, self.intro_phase_t, self.intro_replay = 'off', 0.0, False
         elif (self.intro_phase == 'off' and c['intro_repeat'] > 0
-              and self.since_intro >= c['intro_repeat'] and self.quiet_t >= c['intro_repeat_still']):
+              and self.no_interact_t >= c['intro_repeat']):
             self.intro_phase, self.intro_phase_t, self.intro_replay = 'title_hold', 0.0, True
         elif self.intro_phase == 'title' and self.person_t > 0.3 and (
                 self.motion > c['intro_motion'] or self.person_t > c['intro_max_wait']):
