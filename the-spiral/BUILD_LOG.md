@@ -124,3 +124,8 @@ Format per entry: what I tried · what broke · what I asked Claude · what fina
 - **Changed:** after someone starts moving, the title now holds ~3 s (`intro_title_hold`) before crossfading, and the instructions stay ~8 s (`intro_instructions_time`, was 5). Behind both pages, the flipped camera image shows at 15% (**Mirror Behind Intro** on the Intro page); the artworks stay hidden until the intro ends.
 - **Fix:** over the faint mirror, the pointing hand's dark square showed as a black box, so that image is now blended with "maximum" (lighten) from its own clear layer, which leaves only the white hand.
 - Older saved versions without an instructions page skip both new steps, so they behave as before. Tests updated; 12 pass. Checked both pages live with the faint mirror behind them.
+
+## 2026-10-07 - Intro replays for people who linger
+- **Asked for:** show the intro screens again every 1-2 minutes, but only if the visitor is still and not interacting (hands up or selecting an artwork).
+- **Changed:** 90 s after the intro last finished (`intro_repeat`, **Replay Every** slider, 0 = off), the intro replays (title, then instructions, then the mirror), but only while the visitor is browsing the spiral (not in the grid, a selection or the let-go), has no hands up, and has been still for 2 s. If anyone raises a hand mid-replay it gives way at once. Older snapshots don't replay.
+- **Checked:** new test `test_intro_replays_only_when_idle` (no replay while hands are up for 40 s; replays once still; gives way to raised hands); 13 tests pass. Live, with a 10 s interval: the replay started after 10 s of stillness and faded out as soon as two hands went up. Restored to 90 s.

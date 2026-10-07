@@ -107,6 +107,7 @@ def _build():
     isub = intro.appendStr('Introsubtitle', label='Subtitle')[0]
     isub.default = isub.val = 'a continuous movement through states of being\nlife, death, transformation, return'
     f(intro, 'Intromirror', 'Mirror Behind Intro', 0.15, 0.0, 0.6)
+    f(intro, 'Introrepeat', 'Replay Every (s, 0=off)', 90.0, 0.0, 240.0)
 
     sim = base.appendCustomPage('Simulate')
     t(sim, 'Simulate', 'Simulate (no camera)', True)

@@ -329,7 +329,8 @@ def _cfg():
             'still_time': p.Stilltime.eval(), 'still_threshold': p.Stillthreshold.eval(),
             'one_hand_time': p.Onehandtime.eval(),
             'show_cursors': bool(getattr(p, 'Handdots', None) and p.Handdots.eval()),
-            'intro': bool(p.Intro.eval()) if getattr(p, 'Intro', None) is not None else False}
+            'intro': bool(p.Intro.eval()) if getattr(p, 'Intro', None) is not None else False,
+            **({'intro_repeat': p.Introrepeat.eval()} if getattr(p, 'Introrepeat', None) is not None else {})}
 
 
 def _ops():
@@ -397,6 +398,7 @@ def _ensure():
             # older saved versions have no instructions page: go straight to the mirror
             _S['loop'].cfg['intro_instructions_time'] = 0.0
             _S['loop'].cfg['intro_title_hold'] = 0.0
+            _S['loop'].cfg['intro_repeat'] = 0.0
     return core
 
 
