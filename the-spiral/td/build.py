@@ -103,9 +103,9 @@ def _build():
     intro = base.appendCustomPage('Intro')
     t(intro, 'Intro', 'Show Intro Screen', True)
     it = intro.appendStr('Introtitle', label='Title')[0]
-    it.default = it.val = 'The Spiral'
+    it.default = it.val = 'THE SPIRAL'
     isub = intro.appendStr('Introsubtitle', label='Subtitle')[0]
-    isub.default = isub.val = 'A continuous movement through states of being'
+    isub.default = isub.val = 'a continuous movement through states of being\nlife, death, transformation, return'
 
     sim = base.appendCustomPage('Simulate')
     t(sim, 'Simulate', 'Simulate (no camera)', True)
@@ -282,28 +282,70 @@ def _build():
     captioned = place(base.create(nullTOP, 'captioned'), 25, 6)
     captioned.inputConnectors[0].connect(cbover)
 
-    # intro screen: black, title + subtitle, faded out by loop_td once someone moves
+    # intro screens, from the Figma design (1440x1024 frames scaled to 1280x720 by height):
+    #   page 1  title + subtitle      page 2  "raise hands" / "point to select" + hand images
+    # loop_td crossfades page 1 -> 2 (intro_pages.cross) and fades the whole layer out
+    # (intro_level.opacity) once someone steps in and moves.
+    inter = path('fonts', 'Inter-Regular.ttf')
+    inter_light = path('fonts', 'Inter-Light.ttf')
+    white = dict(fontcolorr=1.0, fontcolorg=1.0, fontcolorb=1.0)
+
+    def text_layer(name, x, y, txt, font_file, size, nx, ny, spacing=0):
+        tt = place(base.create(textTOP, name), nx, ny)
+        setp(tt, outputresolution='custom', resolutionw=1280, resolutionh=720, text=txt,
+             fontfile=font_file, fontsizexunit='pixels', fontsizex=size,
+             alignx='center', aligny='center', positionunit='pixels', positionx=x, positiony=y,
+             linespacingunit='pixels', linespacing=spacing, bgalpha=0.0, **white)
+        return tt
+
+    def over(name, top, under, nx, ny, **xf):
+        o = place(base.create(overTOP, name), nx, ny)
+        o.inputConnectors[0].connect(top)
+        o.inputConnectors[1].connect(under)
+        if xf:
+            setp(o, size='input2', prefit='nativeres', justifyh='center', justifyv='center',
+                 tunit='pixels', **xf)
+        return o
+
     ibg = place(base.create(constantTOP, 'intro_bg'), 22, 12)
     setp(ibg, outputresolution='custom', resolutionw=1280, resolutionh=720,
          colorr=0, colorg=0, colorb=0, alpha=1)
-    ititle = place(base.create(textTOP, 'intro_title'), 22, 14)
-    setp(ititle, outputresolution='custom', resolutionw=1280, resolutionh=720,
-         text='=parent().par.Introtitle', font='Baskerville', fontsizexunit='pixels', fontsizex=78,
-         alignx='center', aligny='center', positionunit='pixels', positionx=0, positiony=34,
-         bgalpha=0.0, fontcolorr=0.96, fontcolorg=0.95, fontcolorb=0.92)
-    isubt = place(base.create(textTOP, 'intro_subtitle'), 22, 16)
-    setp(isubt, outputresolution='custom', resolutionw=1280, resolutionh=720,
-         text='=parent().par.Introsubtitle', font='Avenir', fontsizexunit='pixels', fontsizex=22,
-         alignx='center', aligny='center', positionunit='pixels', positionx=0, positiony=-52,
-         bgalpha=0.0, fontcolorr=0.78, fontcolorg=0.77, fontcolorb=0.74)
-    io1 = place(base.create(overTOP, 'intro_title_over'), 23, 13)
-    io1.inputConnectors[0].connect(ititle)
-    io1.inputConnectors[1].connect(ibg)
-    io2 = place(base.create(overTOP, 'intro_sub_over'), 24, 14)
-    io2.inputConnectors[0].connect(isubt)
-    io2.inputConnectors[1].connect(io1)
-    ilevel = place(base.create(levelTOP, 'intro_level'), 25, 14)
-    ilevel.inputConnectors[0].connect(io2)
+
+    # page 1: THE SPIRAL / subtitle
+    ititle = text_layer('intro_title', 0, 39, '=parent().par.Introtitle', inter, 90, 22, 14)
+    isubt = text_layer('intro_subtitle', 0, -74, '=parent().par.Introsubtitle', inter_light, 25, 22, 16, spacing=6)
+    p1a = over('intro_p1_title', ititle, ibg, 23, 14)
+    page1 = over('intro_page1', isubt, p1a, 24, 15)
+
+    # page 2: instructions with the hand images (pointing hand's grey square crushed to black)
+    def hand(name, fn, nx, ny):
+        img = place(base.create(moviefileinTOP, name), nx, ny)
+        setp(img, file=path('intro', fn))
+        lvl = place(base.create(levelTOP, name + '_clean'), nx + 1, ny)
+        lvl.inputConnectors[0].connect(img)
+        setp(lvl, inlow=0.14)
+        return lvl
+
+    hl = hand('intro_hand_left', 'hand_left.png', 22, 18)
+    hr = hand('intro_hand_right', 'hand_right.png', 22, 19)
+    hp = hand('intro_hand_point', 'hand_point.png', 22, 20)
+    raise_t = text_layer('intro_raise', -216, 142, 'raise hands', inter_light, 25, 22, 21)
+    point_t = text_layer('intro_point', 195, 142, 'point to select', inter_light, 25, 22, 22)
+    # Over TOP scales before it translates, so offsets are given in pre-scale pixels
+    def at(x, y, sc):
+        return dict(tx=round(x / sc, 1), ty=round(y / sc, 1), sx=sc, sy=sc)
+    p2a = over('intro_p2_left', hl, ibg, 24, 18, **at(-319, -50, 0.703))
+    p2b = over('intro_p2_right', hr, p2a, 25, 19, **at(-125, -59, 0.703))
+    p2c = over('intro_p2_point', hp, p2b, 26, 20, **at(195, -55, 0.593))
+    p2d = over('intro_p2_raise', raise_t, p2c, 27, 21)
+    page2 = over('intro_page2', point_t, p2d, 28, 22)
+
+    pages = place(base.create(crossTOP, 'intro_pages'), 29, 15)
+    pages.inputConnectors[0].connect(page1)
+    pages.inputConnectors[1].connect(page2)
+    setp(pages, cross=0.0)
+    ilevel = place(base.create(levelTOP, 'intro_level'), 30, 15)
+    ilevel.inputConnectors[0].connect(pages)
     setp(ilevel, opacity=1.0)
     iover = place(base.create(overTOP, 'intro_over'), 26, 8)
     iover.inputConnectors[0].connect(ilevel)

@@ -44,6 +44,7 @@ DEFAULTS = {
     'intro_max_wait': 4.0,      # s a still person waits before it fades anyway
     'intro_fade_out': 1.5,      # s for the black to fade into the mirror
     'intro_fade_in': 2.0,       # s for it to return once nobody is there
+    'intro_instructions_time': 5.0,  # s the "raise hands / point to select" page shows before the mirror
     'person_lost_time': 3.0,    # s without a person before going idle
     'forget_visitor_time': 8.0, # s idle before the mirror forgets you were here
     # --- reveal ---
@@ -166,6 +167,7 @@ class Frame:
         self.caption_index = -1     # which artwork's caption to show (-1 = none)
         self.caption_alpha = 0.0
         self.intro_alpha = 0.0      # black title screen over everything (1 = shown)
+        self.intro_page = 0.0       # 0 = title page, 1 = instructions page (crossfade)
         self.state = IDLE
         self.info = {}
 
@@ -240,6 +242,9 @@ class CuriosityLoop:
         self.caption_alpha = 0.0
         self.intro_on = True
         self.intro_alpha = 1.0
+        self.intro_phase = 'title'  # title -> instructions -> off
+        self.intro_phase_t = 0.0
+        self.intro_page = 0.0
         self.person_t = 0.0
         self.springs = [{k: _Spring() for k in ('x', 'y', 'z', 'rot', 'scale', 'alpha', 'bright')}
                         for _ in range(self.n)]
@@ -618,18 +623,28 @@ class CuriosityLoop:
             co.alpha = clamp(cs['alpha'].step(alpha, dt, *SLOW), 0.0, 1.0)
             fr.cursors.append(co)
 
-        # intro: shown until someone is here AND moving (or has stood there a while);
-        # it comes back once the mirror has gone idle, ready for the next visitor
-        if not self.cfg['intro']:
-            self.intro_on = False
+        # intro: title page while nobody is here; once someone is here AND moving (or has
+        # stood there a while) it crossfades to the instructions page, then fades into the
+        # mirror. It comes back once the mirror goes idle, ready for the next visitor.
+        c = self.cfg
+        self.intro_phase_t += dt
+        if not c['intro']:
+            self.intro_phase = 'off'
         elif s == IDLE:
-            self.intro_on = True
-        elif self.intro_on and self.person_t > 0.3 and (
-                self.motion > self.cfg['intro_motion'] or self.person_t > self.cfg['intro_max_wait']):
-            self.intro_on = False
-        tau = (self.cfg['intro_fade_in'] if self.intro_on else self.cfg['intro_fade_out']) / 3.0
+            if self.intro_phase != 'title':
+                self.intro_phase, self.intro_phase_t = 'title', 0.0
+        elif self.intro_phase == 'title' and self.person_t > 0.3 and (
+                self.motion > c['intro_motion'] or self.person_t > c['intro_max_wait']):
+            self.intro_phase, self.intro_phase_t = 'instructions', 0.0
+        elif self.intro_phase == 'instructions' and self.intro_phase_t >= c['intro_instructions_time']:
+            self.intro_phase, self.intro_phase_t = 'off', 0.0
+        self.intro_on = self.intro_phase != 'off'
+        tau = (c['intro_fade_in'] if self.intro_on else c['intro_fade_out']) / 3.0
         self.intro_alpha = smooth(self.intro_alpha, 1.0 if self.intro_on else 0.0, dt, tau)
-        fr.intro_alpha = self.intro_alpha if self.cfg['intro'] else 0.0
+        page_target = 0.0 if self.intro_phase == 'title' else 1.0 if self.intro_phase == 'instructions' else self.intro_page
+        self.intro_page = smooth(self.intro_page, page_target, dt, 0.35)
+        fr.intro_alpha = self.intro_alpha if c['intro'] else 0.0
+        fr.intro_page = self.intro_page
 
         # caption: fades in once the artwork has mostly arrived, out as soon as it lets go
         showing = (s == DISTORT) or (s == FOCUS and self.state_t > self.cfg['focus_time'] * 0.6)

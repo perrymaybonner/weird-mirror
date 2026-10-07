@@ -170,17 +170,18 @@ def test_caption_formats():
 def test_intro_screen():
     loop = L.CuriosityLoop(16)
     fr = run(loop, 2, nobody)
-    assert fr.intro_alpha > 0.95, 'black title screen while nobody is there'
+    assert fr.intro_alpha > 0.95 and fr.intro_page < 0.05, 'title page while nobody is there'
     still = lambda t: L.Inputs(person=True, body_speed=0.0)
     fr = run(loop, 1.5, still)
-    assert fr.intro_alpha > 0.9, 'someone arrived but has not moved yet'
-    fr = run(loop, 2.5, standing_moving)
-    assert fr.intro_alpha < 0.1, 'moving fades the intro into the mirror'
-    fr = run(loop, 3.0, nobody)          # leaves: mirror goes idle after person_lost_time
-    fr = run(loop, 3.0, nobody)
-    assert fr.intro_alpha > 0.9, 'intro returns for the next visitor'
+    assert fr.intro_alpha > 0.9 and fr.intro_page < 0.05, 'someone arrived but has not moved yet'
+    fr = run(loop, 2.0, standing_moving)
+    assert fr.intro_alpha > 0.9 and fr.intro_page > 0.9, 'moving shows the instructions page'
+    fr = run(loop, 4.5, standing_moving)
+    assert fr.intro_alpha < 0.1, 'after ~5 s of instructions it fades into the mirror'
+    fr = run(loop, 6.0, nobody)          # leaves: mirror goes idle after person_lost_time
+    assert fr.intro_alpha > 0.9 and fr.intro_page < 0.1, 'title page returns for the next visitor'
     loop2 = L.CuriosityLoop(16)
-    fr = run(loop2, 6.0, still)
+    fr = run(loop2, 11.0, still)
     assert fr.intro_alpha < 0.1, 'a person standing still is not stuck on the intro'
     loop3 = L.CuriosityLoop(16, {'intro': False})
     assert run(loop3, 1, nobody).intro_alpha == 0.0

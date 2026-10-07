@@ -345,7 +345,7 @@ def _ops():
             'debug_text': op('debug_text'), 'debug_switch': op('debug_switch'),
             'cap_title': op('cap_title'), 'cap_body': op('cap_body'),
             'cap_body_over': op('cap_body_over'), 'cap_shade': op('cap_shade_level'),
-            'intro_level': op('intro_level')}
+            'intro_level': op('intro_level'), 'intro_pages': op('intro_pages')}
 
 
 def _load_captions(ops, core):
@@ -473,6 +473,8 @@ def apply(fr, ops):
     _apply_caption(fr, ops)
     if ops.get('intro_level') is not None:
         ops['intro_level'].par.opacity = getattr(fr, 'intro_alpha', 0.0)
+    if ops.get('intro_pages') is not None:
+        ops['intro_pages'].par.cross = getattr(fr, 'intro_page', 0.0)
     dbg = bool(BASE.par.Debug.eval())
     if ops['debug_switch'] is not None:
         ops['debug_switch'].par.index = 1 if dbg else 0

@@ -8,7 +8,7 @@ IXD415 — Weird Mirror · TouchDesigner 2025 + MediaPipe (webcam only)
 PERSON → CURIOUS → EXPERIMENTS → DISCOVERS → EXPLORES → SYSTEM LETS GO → CURIOUS AGAIN
 ```
 
-**Intro:** while nobody is there the screen is black with **The Spiral** / *A continuous movement through states of being*. When someone enters the frame and starts moving (or has stood there ~4 s), it fades into the mirror; it fades back in once the mirror goes idle. Title, subtitle and an on/off switch are on `curiosity_loop`'s **Intro** page.
+**Intro (from the Figma design):** while nobody is there the screen shows the title page, **THE SPIRAL** / *a continuous movement through states of being, life, death, transformation, return*, in Inter. When someone enters the frame and starts moving (or has stood there ~4 s), it crossfades to the instructions page (**raise hands** over two open hands, **point to select** over a pointing hand) for ~5 s, then fades into the mirror. It returns once the mirror goes idle. Title, subtitle and on/off switch are on `curiosity_loop`'s **Intro** page; the hand images are in `intro/`, the Inter font (SIL Open Font License) in `fonts/`.
 
 | # | Stage | Trigger | What you see |
 |---|-------|---------|--------------|
