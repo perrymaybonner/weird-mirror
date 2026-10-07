@@ -393,6 +393,9 @@ def _ensure():
         _S['captions'] = _load_captions(_S['ops'], core)
         _S['cap_shown'] = None
         _S['loop'].cfg['caption_layout'] = any(_S['captions'])
+        if _S['ops'].get('intro_pages') is None:
+            # older saved versions have no instructions page: go straight to the mirror
+            _S['loop'].cfg['intro_instructions_time'] = 0.0
     return core
 
 
